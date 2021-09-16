@@ -3,7 +3,7 @@ from flask import Flask
 import mysql.connector
 import psycopg2
 from decouple import config
-
+import matplotlib.pyplot as plt, mpld3
 
 
 
@@ -41,17 +41,18 @@ server = Flask(__name__)
 def listBlog():
     userID = config('userID')
     pw = config('pw')
+    hostname = config('hostname')
     
     print(userID, pw)
-    conn = psycopg2.connect(database="dev", user = userID, password = pw, host = "redshift-cluster-1.ccs6bshicmph.us-east-1.redshift.amazonaws.com", port = "5439")
+    conn = psycopg2.connect(database="dev", user = userID, password = pw, host = hostname, port = "5439")
     cursor = conn.cursor()
-    cursor.execute('SELECT firstname, lastname, total_quantity FROM   (SELECT buyerid, sum(qtysold) total_quantity FROM  sales GROUP BY buyerid ORDER BY total_quantity desc limit 10) Q, users WHERE Q.buyerid = userid ORDER BY Q.total_quantity desc;')
+    cursor.execute('SELECT sum(qtysold) FROM sales;')
     rec = []
     for row in cursor.fetchall():
         rec.append(row[0])
-    response = ''
-    response = response  + '<div>   Hello  ' + "".join([str(i) for i in rec]) + '</div>'
-    return response
+    
+    plt.plot(rec)
+    return mpld3.show()
 
 
 if __name__ == '__main__':
