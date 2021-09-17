@@ -46,19 +46,22 @@ def listBlog():
 
     conn = psycopg2.connect(database="dev", user = userID, password = pw, host = hostname, port = "5439")
     cursor = conn.cursor()
-    cursor.execute('SELECT qtysold FROM sales;')
+    cursor.execute('SELECT firstname, total_quantity FROM (SELECT buyerid, sum(qtysold) total_quantity FROM sales GROUP BY buyerid ORDER BY total_quantity desc limit 10) Q, users WHERE Q.buyerid = userid ORDER BY Q.total_quantity desc;')
 
 
     fig = plt.figure()
     y_coords = []
     x_coords = []
+    names = []
     for index, row in enumerate(cursor.fetchall()):
-        y_coords.append(row[0])
+        y_coords.append(row[1])
         x_coords.append(index)
-        #print("\nData:"+ str(row[0]))
+        names.append(str(row[0]))
     
 
     plt.plot(x_coords,y_coords, marker = 'o', color='darkcyan', linestyle='none')
+
+    #plt.bar(x_coords,y_coords, align='center')
 
     response = str(mpld3.fig_to_html(fig, template_type='simple'))
     return response
